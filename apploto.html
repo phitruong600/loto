@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loto 1-90 | Quay Số May Mắn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0fdf4;
+            /* Green tint background */
+        }
+
+        /* Hiệu ứng bóng số lăn */
+        .ball-shadow {
+            box-shadow: inset -5px -5px 15px rgba(0, 0, 0, 0.2), 5px 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Hiệu ứng rung khi đang quay */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shaking {
+            animation: shake 0.5s;
+            animation-iteration-count: infinite;
+        }
+
+        /* Hiệu ứng số mới ra */
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .number-pop {
+            animation: popIn 0.3s ease-out forwards;
+        }
+
+        /* Grid cho bảng số */
+        .loto-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+        }
+
+        @media (min-width: 640px) {
+            .loto-grid {
+                grid-template-columns: repeat(10, 1fr);
+                gap: 6px;
+            }
+        }
+        
+        /* Toggle Switch cho Auto Mode */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #68D391;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 text-gray-800">
+
+    <div class="container mx-auto px-4 max-w-6xl">
+
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <h1 class="text-3xl md:text-5xl font-black text-green-700 uppercase tracking-wide drop-shadow-sm">
+                Lô Tô Truyền Thống
+            </h1>
+            <p class="text-gray-500 mt-2 text-sm md:text-base">Phím tắt: Space hoặc Mũi tên phải (→)</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Cột Trái: Khu vực Quay số & Điều khiển (Chiếm 4 phần) -->
+            <div class="lg:col-span-4 flex flex-col gap-4">
+
+                <!-- Khung hiển thị số lớn -->
+                <div class="bg-white rounded-3xl shadow-xl p-6 flex flex-col items-center justify-center border-2 border-green-100 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-blue-500"></div>
+
+                    <!-- Thống kê nhanh -->
+                    <div class="w-full flex justify-between text-sm font-bold text-gray-500 mb-4 px-2">
+                        <span>Đã gọi: <span id="countCalled" class="text-green-600 text-lg">0</span></span>
+                        <span>Còn lại: <span id="countRemaining" class="text-red-500 text-lg">90</span></span>
+                    </div>
+
+                    <h2 class="text-lg font-bold text-gray-400 mb-2">SỐ VỪA RA</h2>
+
+                    <!-- Quả bóng số -->
+                    <div id="currentBall" class="w-40 h-40 md:w-48 md:h-48 rounded-full bg-gradient-to-br from-white to-gray-100 border-4 border-green-500 flex items-center justify-center ball-shadow mb-4 transition-transform cursor-pointer" onclick="drawNumber()">
+                        <span id="displayNumber" class="text-7xl md:text-8xl font-black text-green-600 tracking-tighter">--</span>
+                    </div>
+
+                    <!-- Thông báo trạng thái -->
+                    <div id="statusText" class="text-sm font-semibold text-blue-600 mb-2 h-5 text-center w-full truncate"></div>
+
+                    <!-- Nút bấm thủ công -->
+                    <button id="btnDraw" onclick="drawNumber()" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white text-xl font-bold rounded-xl shadow-lg transform transition active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-300 mb-3">
+                        QUAY SỐ (Space)
+                    </button>
+
+                    <!-- Control Panel: Auto & Voice -->
+                    <div class="w-full bg-gray-50 p-3 rounded-xl border border-gray-200 text-sm">
+                        <!-- Auto Mode Control -->
+                        <div class="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
+                            <span class="font-bold text-gray-700">Tự động quay</span>
+                            <div class="flex items-center gap-2">
+                                <select id="autoSpeed" class="bg-white border border-gray-300 text-gray-700 text-xs rounded px-2 py-1 outline-none">
+                                    <option value="3000">3 giây</option>
+                                    <option value="4000" selected>4 giây</option>
+                                    <option value="5000">5 giây</option>
+                                </select>
+                                <button id="btnAutoToggle" onclick="toggleAutoMode()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded font-bold transition">
+                                    BẬT
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Voice Control -->
+                        <div class="flex flex-col gap-1">
+                            <label class="font-bold text-gray-700 flex justify-between">
+                                <span>Giọng đọc</span>
+                                <span onclick="testVoice()" class="text-green-600 cursor-pointer hover:underline text-xs">Thử giọng</span>
+                            </label>
+                            <select id="voiceSelect" onchange="testVoice()" class="w-full bg-white border border-gray-300 text-gray-700 rounded px-2 py-1 outline-none text-xs truncate">
+                                <option value="">Mặc định</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="resetGame()" class="mt-3 w-full py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg transition text-sm">
+                        Làm Mới (Chơi Lại)
+                    </button>
+                </div>
+
+                <!-- Lịch sử gần nhất (Mobile & Desktop) -->
+                <div class="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
+                    <h3 class="font-bold text-gray-700 mb-2">Lịch sử (Mới nhất trước)</h3>
+                    <div id="recentHistory" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1 scrollbar-thin">
+                        <span class="text-sm text-gray-400 italic">Chưa có số nào</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột Phải: Bảng Dò Số (Check Sheet) (Chiếm 8 phần) -->
+            <div class="lg:col-span-8">
+                <div class="bg-white rounded-3xl shadow-xl p-4 md:p-6 border border-gray-100 h-full">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800">Bảng Dò Số</h2>
+                        <div class="flex gap-3 text-xs md:text-sm">
+                            <div class="flex items-center gap-1"><div class="w-3 h-3 bg-gray-100 border rounded"></div> Chưa ra</div>
+                            <div class="flex items-center gap-1"><div class="w-3 h-3 bg-red-500 rounded text-white"></div> Đã ra</div>
+                        </div>
+                    </div>
+
+                    <!-- Grid 90 số -->
+                    <div id="boardGrid" class="loto-grid select-none">
+                        <!-- Javascript sẽ tạo 90 ô ở đây -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script xử lý logic -->
+    <script>
+        // Cấu hình
+        const TOTAL_NUMBERS = 90;
+        let availableNumbers = [];
+        let drawnNumbers = [];
+        let isAnimating = false;
+        
+        // Auto Mode State
+        let autoIntervalId = null;
+        let isAutoPlaying = false;
+
+        // Âm thanh
+        const synth = window.speechSynthesis;
+        let voices = [];
+
+        // Khởi tạo
+        window.onload = function() {
+            initGame();
+            initVoices();
+            setupKeyboard();
+        };
+
+        // --- Keyboard Controls ---
+        function setupKeyboard() {
+            document.addEventListener('keydown', function(event) {
+                // Ngăn chặn hành động mặc định của phím Space (cuộn trang)
+                if (event.code === 'Space') {
+                    event.preventDefault(); 
+                }
+
+                // Nếu đang auto play thì không nhận phím thủ công để tránh xung đột logic
+                if (isAutoPlaying) return;
+
+                if ((event.code === 'Space' || event.code === 'ArrowRight')) {
+                    if (!isAnimating && availableNumbers.length > 0) {
+                        drawNumber();
+                    }
+                }
+            });
+        }
+
+        // --- Voice Logic ---
+        function initVoices() {
+            // Chrome load voices async
+            if (synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = populateVoiceList;
+            }
+            populateVoiceList();
+        }
+
+        function populateVoiceList() {
+            voices = synth.getVoices();
+            const voiceSelect = document.getElementById('voiceSelect');
+            voiceSelect.innerHTML = '<option value="">Mặc định</option>';
+            
+            // Ưu tiên giọng tiếng Việt
+            const vnVoices = voices.filter(v => v.lang.includes('vi'));
+            const otherVoices = voices.filter(v => !v.lang.includes('vi'));
+
+            vnVoices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (VN)`;
+                option.value = index; // Lưu index tương đối trong mảng vnVoices nếu muốn, hoặc dùng tên. Ở đây dùng index global thì dễ hơn.
+                // Tìm lại index trong mảng gốc
+                const globalIndex = voices.indexOf(voice);
+                option.value = globalIndex;
+                voiceSelect.appendChild(option);
+            });
+
+            // Nếu không có giọng VN thì hiện giọng khác (đề phòng)
+            if(vnVoices.length === 0) {
+                otherVoices.forEach((voice, index) => {
+                     // Chỉ hiển thị vài giọng phổ biến nếu cần
+                });
+            }
+        }
+
+        function speakNumber(num) {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            const utterance = new SpeechSynthesisUtterance(`Số ${num}`);
+            
+            // Chọn giọng
+            const voiceSelect = document.getElementById('voiceSelect');
+            const selectedIndex = voiceSelect.value;
+            
+            if (selectedIndex !== "") {
+                utterance.voice = voices[selectedIndex];
+            } else {
+                // Nếu để mặc định, cố gắng tìm giọng VN đầu tiên
+                const vnVoice = voices.find(v => v.lang.includes('vi'));
+                if (vnVoice) utterance.voice = vnVoice;
+            }
+            
+            utterance.rate = 1.0;
+            synth.speak(utterance);
+        }
+        
+        function testVoice() {
+             if (synth.speaking) synth.cancel();
+             const utterance = new SpeechSynthesisUtterance("Lô tô xin chào");
+             const voiceSelect = document.getElementById('voiceSelect');
+             const selectedIndex = voiceSelect.value;
+             if (selectedIndex !== "") {
+                utterance.voice = voices[selectedIndex];
+             }
+             synth.speak(utterance);
+        }
+
+        // --- Game Logic ---
+
+        function initGame() {
+            stopAutoMode();
+            availableNumbers = Array.from({length: TOTAL_NUMBERS}, (_, i) => i + 1);
+            drawnNumbers = [];
+            isAnimating = false;
+
+            // Reset UI
+            const display = document.getElementById('displayNumber');
+            display.innerText = "--";
+            display.classList.remove('text-red-600');
+            display.classList.add('text-green-600');
+            
+            document.getElementById('statusText').innerText = "Sẵn sàng!";
+            document.getElementById('btnDraw').disabled = false;
+            document.getElementById('btnDraw').classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            updateCountDisplay();
+            renderBoard();
+            renderHistory();
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('boardGrid');
+            board.innerHTML = '';
+            for (let i = 1; i <= TOTAL_NUMBERS; i++) {
+                const cell = document.createElement('div');
+                cell.className = `
+                    flex items-center justify-center 
+                    h-8 sm:h-10 md:h-12 
+                    rounded text-sm sm:text-lg font-bold border
+                    transition-all duration-300
+                `;
+                cell.id = `cell-${i}`;
+                if (drawnNumbers.includes(i)) {
+                    cell.className += " bg-red-500 text-white border-red-600 shadow-md transform scale-105";
+                } else {
+                    cell.className += " bg-gray-50 text-gray-400 border-gray-200";
+                }
+                cell.innerText = i;
+                board.appendChild(cell);
+            }
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('recentHistory');
+            container.innerHTML = '';
+            if (drawnNumbers.length === 0) {
+                container.innerHTML = '<span class="text-sm text-gray-400 italic">Chưa có số nào</span>';
+                return;
+            }
+            [...drawnNumbers].reverse().forEach((num, index) => {
+                const badge = document.createElement('span');
+                if (index === 0) {
+                    badge.className = "w-10 h-10 rounded-full bg-red-500 text-white font-bold flex items-center justify-center shadow border-2 border-red-300 text-lg number-pop";
+                } else {
+                    badge.className = "w-8 h-8 rounded-full bg-gray-200 text-gray-700 font-semibold flex items-center justify-center text-sm";
+                }
+                badge.innerText = num;
+                container.appendChild(badge);
+            });
+        }
+
+        function updateCountDisplay() {
+            document.getElementById('countCalled').innerText = drawnNumbers.length;
+            document.getElementById('countRemaining').innerText = availableNumbers.length;
+        }
+
+        // --- Auto Mode ---
+        function toggleAutoMode() {
+            const btn = document.getElementById('btnAutoToggle');
+            const speed = parseInt(document.getElementById('autoSpeed').value);
+
+            if (isAutoPlaying) {
+                stopAutoMode();
+            } else {
+                if (availableNumbers.length === 0) {
+                    alert("Hết số rồi!");
+                    return;
+                }
+                // Start Auto
+                isAutoPlaying = true;
+                btn.innerText = "DỪNG";
+                btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                btn.classList.add('bg-red-500', 'hover:bg-red-600', 'animate-pulse');
+                
+                // Disable manual button while auto is running
+                document.getElementById('btnDraw').disabled = true;
+                document.getElementById('btnDraw').classList.add('opacity-50', 'cursor-not-allowed');
+
+                // Call immediately then set interval
+                drawNumber();
+                autoIntervalId = setInterval(() => {
+                    if (availableNumbers.length > 0 && !isAnimating) {
+                        drawNumber();
+                    } else if (availableNumbers.length === 0) {
+                        stopAutoMode();
+                    }
+                }, speed + 1500); // Speed + animation time buffer
+            }
+        }
+
+        function stopAutoMode() {
+            isAutoPlaying = false;
+            if (autoIntervalId) clearInterval(autoIntervalId);
+            autoIntervalId = null;
+            
+            const btn = document.getElementById('btnAutoToggle');
+            btn.innerText = "BẬT";
+            btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            btn.classList.remove('bg-red-500', 'hover:bg-red-600', 'animate-pulse');
+            
+            // Re-enable manual button if not animating
+            if (!isAnimating && availableNumbers.length > 0) {
+                document.getElementById('btnDraw').disabled = false;
+                document.getElementById('btnDraw').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // --- Core Draw Function ---
+        function drawNumber() {
+            if (isAnimating) return;
+            if (availableNumbers.length === 0) {
+                document.getElementById('statusText').innerText = "Đã hết số!";
+                stopAutoMode();
+                return;
+            }
+
+            isAnimating = true;
+            const btn = document.getElementById('btnDraw');
+            const display = document.getElementById('displayNumber');
+            const ball = document.getElementById('currentBall');
+            
+            // Visual start
+            ball.classList.add('shaking');
+            display.classList.remove('text-red-600');
+            display.classList.add('text-green-600');
+            
+            // Animation loop
+            let count = 0;
+            const animDuration = 1200; // 1.2s animation
+            const interval = setInterval(() => {
+                const randomTemp = Math.floor(Math.random() * 90) + 1;
+                display.innerText = randomTemp;
+                count++;
+            }, 80);
+
+            // Finalize after animation
+            setTimeout(() => {
+                clearInterval(interval);
+                
+                // Logic pick number
+                const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+                const selectedNumber = availableNumbers[randomIndex];
+                
+                availableNumbers.splice(randomIndex, 1);
+                drawnNumbers.push(selectedNumber);
+
+                // Update UI
+                ball.classList.remove('shaking');
+                display.innerText = selectedNumber;
+                display.classList.remove('text-green-600');
+                display.classList.add('text-red-600');
+                
+                renderBoard();
+                renderHistory();
+                updateCountDisplay();
+                speakNumber(selectedNumber);
+
+                isAnimating = false;
+                
+                // Check end game
+                if (availableNumbers.length === 0) {
+                    document.getElementById('statusText').innerText = "HẾT SỐ!";
+                    btn.innerText = "HẾT SỐ";
+                    stopAutoMode();
+                }
+
+            }, animDuration);
+        }
+
+        function resetGame() {
+            if (drawnNumbers.length > 0 && confirm("Bạn có chắc muốn xóa hết lịch sử và chơi lại từ đầu không?")) {
+                initGame();
+                document.getElementById('btnDraw').innerText = "QUAY SỐ (Space)";
+            } else if (drawnNumbers.length === 0) {
+                initGame();
+            }
+        }
+    </script>
+</body>
+</html>
