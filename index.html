@@ -2,176 +2,248 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loto 1-90 | Quay Số May Mắn</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Loto Pro | Quay Số May Mắn</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f0fdf4;
-            /* Green tint background */
+            /* Ngăn kéo trang trên mobile để tạo cảm giác giống App native */
+            overscroll-behavior-y: none;
+            touch-action: manipulation;
+            background-color: #f3f4f6;
         }
 
-        /* Hiệu ứng bóng số lăn */
-        .ball-shadow {
-            box-shadow: inset -5px -5px 15px rgba(0, 0, 0, 0.2), 5px 5px 15px rgba(0, 0, 0, 0.1);
+        /* Hiệu ứng bóng 3D thực hơn */
+        .loto-ball {
+            background: radial-gradient(circle at 30% 30%, #ffffff, #e5e7eb, #9ca3af);
+            box-shadow: 
+                inset -5px -5px 15px rgba(0,0,0,0.15), 
+                5px 10px 20px rgba(0,0,0,0.15),
+                inset 5px 5px 10px rgba(255,255,255,0.8);
+        }
+        
+        .loto-ball.active-spin {
+             background: radial-gradient(circle at 30% 30%, #ecfdf5, #a7f3d0, #34d399);
+             box-shadow: 
+                inset -5px -5px 15px rgba(0,0,0,0.2), 
+                0 0 20px rgba(52, 211, 153, 0.6);
         }
 
-        /* Hiệu ứng rung khi đang quay */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        /* Rung lắc mạnh hơn */
+        @keyframes shake-hard {
+            0% { transform: translate(0, 0) rotate(0); }
+            10% { transform: translate(-3px, -3px) rotate(-5deg); }
+            20% { transform: translate(3px, 2px) rotate(5deg); }
+            30% { transform: translate(-4px, 2px) rotate(-5deg); }
+            40% { transform: translate(4px, -3px) rotate(5deg); }
+            50% { transform: translate(-3px, 3px) rotate(-5deg); }
+            60% { transform: translate(3px, -2px) rotate(5deg); }
+            70% { transform: translate(-4px, -3px) rotate(-5deg); }
+            80% { transform: translate(2px, 3px) rotate(5deg); }
+            90% { transform: translate(-2px, -2px) rotate(-5deg); }
+            100% { transform: translate(0, 0) rotate(0); }
         }
-
         .shaking {
-            animation: shake 0.5s;
-            animation-iteration-count: infinite;
+            animation: shake-hard 0.3s infinite linear;
         }
 
-        /* Hiệu ứng số mới ra */
-        @keyframes popIn {
-            0% { transform: scale(0); opacity: 0; }
-            80% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); }
+        @keyframes pop-scale {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: pop-scale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
-        .number-pop {
-            animation: popIn 0.3s ease-out forwards;
-        }
-
-        /* Grid cho bảng số */
-        .loto-grid {
+        /* Grid Responsive thông minh */
+        .grid-responsive {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
             gap: 4px;
+            /* Mobile Portrait: 5 cột */
+            grid-template-columns: repeat(5, 1fr); 
         }
-
+        
+        /* Mobile Landscape & Tablet: 10 cột */
         @media (min-width: 640px) {
-            .loto-grid {
+            .grid-responsive {
                 grid-template-columns: repeat(10, 1fr);
                 gap: 6px;
             }
         }
-        
-        /* Toggle Switch cho Auto Mode */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #68D391;
+
+        /* Custom Scrollbar cho đẹp */
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
         }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #68D391;
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        /* Landscape Mobile Tweaks (Chiều cao thấp) */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .landscape-hide { display: none !important; }
+            .landscape-compact-ball { width: 5rem !important; height: 5rem !important; }
+            .landscape-compact-text { font-size: 2.5rem !important; }
+            .landscape-flex-row { flex-direction: row !important; }
+            .landscape-col-span-1 { grid-column: span 1 / span 1 !important; }
+            .landscape-h-full { height: 100vh !important; overflow: hidden; padding-bottom: 0 !important; }
+            .landscape-scroll-area { height: calc(100vh - 20px) !important; overflow-y: auto; }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center py-6 text-gray-800">
+<body class="bg-gray-100 text-gray-800 h-screen overflow-hidden flex flex-col">
 
-    <div class="container mx-auto px-4 max-w-6xl">
+    <!-- Thanh Topbar (Nhỏ gọn) -->
+    <div class="bg-white shadow-sm z-20 flex-none px-4 py-2 flex justify-between items-center landscape-hide">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">L</div>
+            <h1 class="font-black text-xl text-gray-800 tracking-tight">LOTO <span class="text-brand-600">PRO</span></h1>
+        </div>
+        <div class="text-xs text-gray-500 font-semibold bg-gray-100 px-2 py-1 rounded-md">
+            1-90
+        </div>
+    </div>
 
-        <!-- Header -->
-        <header class="text-center mb-6">
-            <h1 class="text-3xl md:text-5xl font-black text-green-700 uppercase tracking-wide drop-shadow-sm">
-                Lô Tô Truyền Thống
-            </h1>
-            <p class="text-gray-500 mt-2 text-sm md:text-base">Phím tắt: Space hoặc Mũi tên phải (→)</p>
-        </header>
+    <!-- Main Container -->
+    <div class="flex-1 overflow-hidden relative w-full max-w-7xl mx-auto p-2 md:p-4">
+        
+        <!-- Layout Grid: Mobile Landscape sẽ chia đôi màn hình -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
+            
+            <!-- CỘT TRÁI: ĐIỀU KHIỂN & BÓNG SỐ -->
+            <!-- Trên Desktop chiếm 4 phần, Mobile Landscape chiếm 5 phần -->
+            <div class="md:col-span-4 lg:col-span-3 flex flex-col gap-3 h-full overflow-y-auto custom-scroll pb-20 md:pb-0 landscape-scroll-area">
+                
+                <!-- Card Chính: Bóng Số -->
+                <div class="bg-white rounded-2xl shadow-lg p-4 flex flex-col items-center justify-center relative border border-gray-100 overflow-hidden shrink-0">
+                    <!-- Background trang trí -->
+                    <div class="absolute top-0 w-full h-1 bg-gradient-to-r from-brand-400 to-blue-500"></div>
+                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-brand-50 rounded-full opacity-50 z-0"></div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-            <!-- Cột Trái: Khu vực Quay số & Điều khiển (Chiếm 4 phần) -->
-            <div class="lg:col-span-4 flex flex-col gap-4">
-
-                <!-- Khung hiển thị số lớn -->
-                <div class="bg-white rounded-3xl shadow-xl p-6 flex flex-col items-center justify-center border-2 border-green-100 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-blue-500"></div>
-
-                    <!-- Thống kê nhanh -->
-                    <div class="w-full flex justify-between text-sm font-bold text-gray-500 mb-4 px-2">
-                        <span>Đã gọi: <span id="countCalled" class="text-green-600 text-lg">0</span></span>
-                        <span>Còn lại: <span id="countRemaining" class="text-red-500 text-lg">90</span></span>
+                    <!-- Thống kê nhỏ -->
+                    <div class="w-full flex justify-between text-xs font-bold text-gray-400 mb-2 z-10">
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-500"></span> Đã gọi: <span id="countCalled" class="text-gray-800 text-sm">0</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-400"></span> Còn lại: <span id="countRemaining" class="text-gray-800 text-sm">90</span></span>
                     </div>
 
-                    <h2 class="text-lg font-bold text-gray-400 mb-2">SỐ VỪA RA</h2>
-
-                    <!-- Quả bóng số -->
-                    <div id="currentBall" class="w-40 h-40 md:w-48 md:h-48 rounded-full bg-gradient-to-br from-white to-gray-100 border-4 border-green-500 flex items-center justify-center ball-shadow mb-4 transition-transform cursor-pointer" onclick="drawNumber()">
-                        <span id="displayNumber" class="text-7xl md:text-8xl font-black text-green-600 tracking-tighter">--</span>
+                    <!-- Quả Bóng (Responsive size) -->
+                    <div id="currentBall" class="loto-ball w-32 h-32 md:w-44 md:h-44 landscape-compact-ball rounded-full flex items-center justify-center mb-3 cursor-pointer transform transition-transform hover:scale-105 active:scale-95 z-10" onclick="drawNumber()">
+                        <span id="displayNumber" class="text-6xl md:text-8xl landscape-compact-text font-black text-gray-700 tracking-tighter transition-colors">--</span>
                     </div>
+                    
+                    <!-- Trạng thái -->
+                    <div id="statusText" class="h-5 text-sm font-bold text-brand-600 mb-2 z-10">Sẵn sàng!</div>
 
-                    <!-- Thông báo trạng thái -->
-                    <div id="statusText" class="text-sm font-semibold text-blue-600 mb-2 h-5 text-center w-full truncate"></div>
-
-                    <!-- Nút bấm thủ công -->
-                    <button id="btnDraw" onclick="drawNumber()" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white text-xl font-bold rounded-xl shadow-lg transform transition active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-300 mb-3">
-                        QUAY SỐ (Space)
+                    <!-- Nút Quay -->
+                    <button id="btnDraw" onclick="drawNumber()" class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white text-lg font-bold py-3 md:py-4 rounded-xl shadow-lg shadow-brand-200 transform transition-all active:translate-y-0.5 z-10 flex items-center justify-center gap-2 group">
+                        <span>QUAY SỐ</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
                     </button>
+                </div>
 
-                    <!-- Control Panel: Auto & Voice -->
-                    <div class="w-full bg-gray-50 p-3 rounded-xl border border-gray-200 text-sm">
-                        <!-- Auto Mode Control -->
-                        <div class="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
-                            <span class="font-bold text-gray-700">Tự động quay</span>
+                <!-- Card Phụ: Cài đặt (Auto & Voice) -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 shrink-0">
+                    <div class="flex flex-col gap-3">
+                        <!-- Auto Play Row -->
+                        <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
-                                <select id="autoSpeed" class="bg-white border border-gray-300 text-gray-700 text-xs rounded px-2 py-1 outline-none">
-                                    <option value="3000">3 giây</option>
-                                    <option value="4000" selected>4 giây</option>
-                                    <option value="5000">5 giây</option>
+                                <div class="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700">Tự động</span>
+                            </div>
+                            <div class="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
+                                <select id="autoSpeed" class="bg-transparent text-xs font-semibold text-gray-600 outline-none">
+                                    <option value="3000">3s</option>
+                                    <option value="4000" selected>4s</option>
+                                    <option value="5000">5s</option>
                                 </select>
-                                <button id="btnAutoToggle" onclick="toggleAutoMode()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded font-bold transition">
+                                <button id="btnAutoToggle" onclick="toggleAutoMode()" class="bg-white shadow text-gray-500 hover:text-brand-600 px-3 py-1 rounded-md text-xs font-bold transition-colors">
                                     BẬT
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Voice Control -->
-                        <div class="flex flex-col gap-1">
-                            <label class="font-bold text-gray-700 flex justify-between">
-                                <span>Giọng đọc</span>
-                                <span onclick="testVoice()" class="text-green-600 cursor-pointer hover:underline text-xs">Thử giọng</span>
-                            </label>
-                            <select id="voiceSelect" onchange="testVoice()" class="w-full bg-white border border-gray-300 text-gray-700 rounded px-2 py-1 outline-none text-xs truncate">
-                                <option value="">Mặc định</option>
-                            </select>
+                        <!-- Voice Row -->
+                        <div class="flex items-center justify-between border-t border-gray-100 pt-2">
+                             <div class="flex items-center gap-2">
+                                <div class="p-1.5 bg-purple-50 text-purple-600 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                                </div>
+                                <span class="text-sm font-bold text-gray-700">Giọng</span>
+                            </div>
+                            <div class="flex-1 ml-3">
+                                <select id="voiceSelect" onchange="testVoice()" class="w-full bg-gray-50 border-none text-xs rounded py-1 px-2 text-gray-600 outline-none truncate">
+                                    <option value="">Mặc định</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-
-                    <button onclick="resetGame()" class="mt-3 w-full py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg transition text-sm">
-                        Làm Mới (Chơi Lại)
-                    </button>
                 </div>
 
-                <!-- Lịch sử gần nhất (Mobile & Desktop) -->
-                <div class="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
-                    <h3 class="font-bold text-gray-700 mb-2">Lịch sử (Mới nhất trước)</h3>
-                    <div id="recentHistory" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1 scrollbar-thin">
-                        <span class="text-sm text-gray-400 italic">Chưa có số nào</span>
-                    </div>
-                </div>
+                <!-- Nút Reset -->
+                <button onclick="resetGame()" class="w-full py-2 text-gray-400 hover:text-gray-600 text-xs font-bold uppercase tracking-wider transition-colors shrink-0">
+                    Làm mới game
+                </button>
             </div>
 
-            <!-- Cột Phải: Bảng Dò Số (Check Sheet) (Chiếm 8 phần) -->
-            <div class="lg:col-span-8">
-                <div class="bg-white rounded-3xl shadow-xl p-4 md:p-6 border border-gray-100 h-full">
-                    <div class="flex justify-between items-center mb-4 border-b pb-2">
-                        <h2 class="text-xl md:text-2xl font-bold text-gray-800">Bảng Dò Số</h2>
-                        <div class="flex gap-3 text-xs md:text-sm">
-                            <div class="flex items-center gap-1"><div class="w-3 h-3 bg-gray-100 border rounded"></div> Chưa ra</div>
-                            <div class="flex items-center gap-1"><div class="w-3 h-3 bg-red-500 rounded text-white"></div> Đã ra</div>
-                        </div>
+            <!-- CỘT PHẢI: BẢNG DÒ SỐ -->
+            <!-- Chiếm không gian còn lại -->
+            <div class="md:col-span-8 lg:col-span-9 h-full overflow-hidden flex flex-col bg-white rounded-2xl shadow-lg border border-gray-100">
+                
+                <!-- Header Bảng -->
+                <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50 flex-none">
+                    <h2 class="font-bold text-gray-800 text-sm md:text-base flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        BẢNG DÒ SỐ
+                    </h2>
+                    <div class="flex gap-3 text-xs font-semibold">
+                        <div class="flex items-center gap-1.5 text-gray-500"><div class="w-2.5 h-2.5 rounded-sm bg-gray-100 border border-gray-300"></div> Chưa</div>
+                        <div class="flex items-center gap-1.5 text-brand-600"><div class="w-2.5 h-2.5 rounded-sm bg-brand-500 shadow-sm"></div> Đã ra</div>
                     </div>
+                </div>
 
-                    <!-- Grid 90 số -->
-                    <div id="boardGrid" class="loto-grid select-none">
-                        <!-- Javascript sẽ tạo 90 ô ở đây -->
+                <!-- Lịch sử gần nhất (Sticky top bên trong bảng) -->
+                <div class="bg-white px-4 py-2 border-b border-gray-100 flex-none z-10 shadow-sm">
+                    <div id="recentHistory" class="flex items-center gap-2 overflow-x-auto no-scrollbar h-10 scroll-smooth">
+                        <span class="text-xs text-gray-400 italic pl-1">Lịch sử sẽ hiện ở đây...</span>
+                    </div>
+                </div>
+
+                <!-- Vùng chứa Grid (Scrollable) -->
+                <div class="flex-1 overflow-y-auto p-2 md:p-4 custom-scroll relative">
+                     <div id="boardGrid" class="grid-responsive select-none">
+                        <!-- JS Render -->
                     </div>
                 </div>
             </div>
@@ -179,238 +251,156 @@
         </div>
     </div>
 
-    <!-- Script xử lý logic -->
     <script>
-        // Cấu hình
+        // === CẤU HÌNH & TRẠNG THÁI ===
         const TOTAL_NUMBERS = 90;
         let availableNumbers = [];
         let drawnNumbers = [];
         let isAnimating = false;
         
-        // Auto Mode State
         let autoIntervalId = null;
         let isAutoPlaying = false;
-
-        // Âm thanh
-        const synth = window.speechSynthesis;
         let voices = [];
+        const synth = window.speechSynthesis;
 
-        // Khởi tạo
+        // === KHỞI TẠO ===
         window.onload = function() {
             initGame();
             initVoices();
             setupKeyboard();
         };
 
-        // --- Keyboard Controls ---
+        // Keyboard Event
         function setupKeyboard() {
-            document.addEventListener('keydown', function(event) {
-                // Ngăn chặn hành động mặc định của phím Space (cuộn trang)
-                if (event.code === 'Space') {
-                    event.preventDefault(); 
-                }
-
-                // Nếu đang auto play thì không nhận phím thủ công để tránh xung đột logic
-                if (isAutoPlaying) return;
-
-                if ((event.code === 'Space' || event.code === 'ArrowRight')) {
-                    if (!isAnimating && availableNumbers.length > 0) {
-                        drawNumber();
-                    }
+            document.addEventListener('keydown', (e) => {
+                if(e.code === 'Space') e.preventDefault();
+                if(isAutoPlaying) return;
+                if((e.code === 'Space' || e.code === 'ArrowRight') && !isAnimating && availableNumbers.length > 0) {
+                    drawNumber();
                 }
             });
         }
 
-        // --- Voice Logic ---
+        // Voice Setup
         function initVoices() {
-            // Chrome load voices async
-            if (synth.onvoiceschanged !== undefined) {
-                synth.onvoiceschanged = populateVoiceList;
-            }
+            if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = populateVoiceList;
             populateVoiceList();
         }
 
         function populateVoiceList() {
             voices = synth.getVoices();
-            const voiceSelect = document.getElementById('voiceSelect');
-            voiceSelect.innerHTML = '<option value="">Mặc định</option>';
+            const select = document.getElementById('voiceSelect');
+            select.innerHTML = '<option value="">Mặc định</option>';
             
-            // Ưu tiên giọng tiếng Việt
             const vnVoices = voices.filter(v => v.lang.includes('vi'));
-            const otherVoices = voices.filter(v => !v.lang.includes('vi'));
-
-            vnVoices.forEach((voice, index) => {
-                const option = document.createElement('option');
-                option.textContent = `${voice.name} (VN)`;
-                option.value = index; // Lưu index tương đối trong mảng vnVoices nếu muốn, hoặc dùng tên. Ở đây dùng index global thì dễ hơn.
-                // Tìm lại index trong mảng gốc
-                const globalIndex = voices.indexOf(voice);
-                option.value = globalIndex;
-                voiceSelect.appendChild(option);
+            vnVoices.forEach((v) => {
+                const opt = document.createElement('option');
+                opt.textContent = `${v.name.slice(0, 15)}.. (VN)`;
+                opt.value = voices.indexOf(v);
+                select.appendChild(opt);
             });
-
-            // Nếu không có giọng VN thì hiện giọng khác (đề phòng)
-            if(vnVoices.length === 0) {
-                otherVoices.forEach((voice, index) => {
-                     // Chỉ hiển thị vài giọng phổ biến nếu cần
+            
+            if(vnVoices.length === 0 && voices.length > 0) {
+                // Thêm một số giọng mẫu khác nếu không có tiếng Việt
+                const fallback = voices.filter(v => v.lang.includes('en')).slice(0, 2);
+                 fallback.forEach((v) => {
+                    const opt = document.createElement('option');
+                    opt.textContent = `${v.name.slice(0, 15)}.. (EN)`;
+                    opt.value = voices.indexOf(v);
+                    select.appendChild(opt);
                 });
             }
         }
 
-        function speakNumber(num) {
-            if (synth.speaking) {
-                synth.cancel();
-            }
-            const utterance = new SpeechSynthesisUtterance(`Số ${num}`);
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voiceIdx = document.getElementById('voiceSelect').value;
             
-            // Chọn giọng
-            const voiceSelect = document.getElementById('voiceSelect');
-            const selectedIndex = voiceSelect.value;
-            
-            if (selectedIndex !== "") {
-                utterance.voice = voices[selectedIndex];
+            if (voiceIdx !== "") {
+                utterance.voice = voices[voiceIdx];
             } else {
-                // Nếu để mặc định, cố gắng tìm giọng VN đầu tiên
-                const vnVoice = voices.find(v => v.lang.includes('vi'));
-                if (vnVoice) utterance.voice = vnVoice;
+                const vn = voices.find(v => v.lang.includes('vi'));
+                if(vn) utterance.voice = vn;
             }
-            
-            utterance.rate = 1.0;
+            utterance.rate = 1;
             synth.speak(utterance);
         }
         
         function testVoice() {
-             if (synth.speaking) synth.cancel();
-             const utterance = new SpeechSynthesisUtterance("Lô tô xin chào");
-             const voiceSelect = document.getElementById('voiceSelect');
-             const selectedIndex = voiceSelect.value;
-             if (selectedIndex !== "") {
-                utterance.voice = voices[selectedIndex];
-             }
-             synth.speak(utterance);
+            speak("Một Hai Ba");
         }
 
-        // --- Game Logic ---
-
+        // === GAME LOGIC ===
         function initGame() {
             stopAutoMode();
             availableNumbers = Array.from({length: TOTAL_NUMBERS}, (_, i) => i + 1);
             drawnNumbers = [];
-            isAnimating = false;
-
+            
             // Reset UI
+            const ball = document.getElementById('currentBall');
             const display = document.getElementById('displayNumber');
+            
             display.innerText = "--";
-            display.classList.remove('text-red-600');
-            display.classList.add('text-green-600');
+            display.className = "text-6xl md:text-8xl landscape-compact-text font-black text-gray-300 tracking-tighter transition-colors";
+            ball.className = "loto-ball w-32 h-32 md:w-44 md:h-44 landscape-compact-ball rounded-full flex items-center justify-center mb-3 cursor-pointer transform transition-transform hover:scale-105 active:scale-95 z-10";
             
             document.getElementById('statusText').innerText = "Sẵn sàng!";
-            document.getElementById('btnDraw').disabled = false;
-            document.getElementById('btnDraw').classList.remove('opacity-50', 'cursor-not-allowed');
-            
-            updateCountDisplay();
+            const btn = document.getElementById('btnDraw');
+            btn.disabled = false;
+            btn.className = "w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white text-lg font-bold py-3 md:py-4 rounded-xl shadow-lg shadow-brand-200 transform transition-all active:translate-y-0.5 z-10 flex items-center justify-center gap-2 group";
+            btn.innerHTML = `<span>QUAY SỐ</span><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>`;
+
+            updateStats();
             renderBoard();
             renderHistory();
         }
 
         function renderBoard() {
-            const board = document.getElementById('boardGrid');
-            board.innerHTML = '';
-            for (let i = 1; i <= TOTAL_NUMBERS; i++) {
-                const cell = document.createElement('div');
-                cell.className = `
-                    flex items-center justify-center 
-                    h-8 sm:h-10 md:h-12 
-                    rounded text-sm sm:text-lg font-bold border
-                    transition-all duration-300
-                `;
-                cell.id = `cell-${i}`;
-                if (drawnNumbers.includes(i)) {
-                    cell.className += " bg-red-500 text-white border-red-600 shadow-md transform scale-105";
+            const grid = document.getElementById('boardGrid');
+            grid.innerHTML = '';
+            for(let i=1; i<=TOTAL_NUMBERS; i++) {
+                const el = document.createElement('div');
+                const isDrawn = drawnNumbers.includes(i);
+                
+                // Style cho ô số
+                let baseClass = "flex items-center justify-center h-8 md:h-10 rounded-lg text-sm md:text-base font-bold transition-all duration-300 border ";
+                if(isDrawn) {
+                    baseClass += "bg-brand-500 text-white border-brand-600 shadow-md transform scale-105 shadow-brand-200";
                 } else {
-                    cell.className += " bg-gray-50 text-gray-400 border-gray-200";
+                    baseClass += "bg-gray-50 text-gray-300 border-gray-100";
                 }
-                cell.innerText = i;
-                board.appendChild(cell);
+                
+                el.className = baseClass;
+                el.innerText = i;
+                el.id = `cell-${i}`;
+                grid.appendChild(el);
             }
         }
 
         function renderHistory() {
             const container = document.getElementById('recentHistory');
             container.innerHTML = '';
-            if (drawnNumbers.length === 0) {
-                container.innerHTML = '<span class="text-sm text-gray-400 italic">Chưa có số nào</span>';
+            if(drawnNumbers.length === 0) {
+                container.innerHTML = '<span class="text-xs text-gray-400 italic pl-1">Lịch sử...</span>';
                 return;
             }
-            [...drawnNumbers].reverse().forEach((num, index) => {
-                const badge = document.createElement('span');
-                if (index === 0) {
-                    badge.className = "w-10 h-10 rounded-full bg-red-500 text-white font-bold flex items-center justify-center shadow border-2 border-red-300 text-lg number-pop";
-                } else {
-                    badge.className = "w-8 h-8 rounded-full bg-gray-200 text-gray-700 font-semibold flex items-center justify-center text-sm";
-                }
+
+            // Hiện tất cả lịch sử, cuộn ngang, mới nhất bên TRÁI
+            [...drawnNumbers].reverse().forEach((num, idx) => {
+                const badge = document.createElement('div');
+                badge.className = `flex-none flex items-center justify-center rounded-full font-bold text-xs shadow-sm border ${idx === 0 ? 'w-8 h-8 bg-brand-500 text-white border-brand-300 animate-pop' : 'w-7 h-7 bg-white text-gray-500 border-gray-200'}`;
                 badge.innerText = num;
                 container.appendChild(badge);
             });
         }
 
-        function updateCountDisplay() {
+        function updateStats() {
             document.getElementById('countCalled').innerText = drawnNumbers.length;
             document.getElementById('countRemaining').innerText = availableNumbers.length;
         }
 
-        // --- Auto Mode ---
-        function toggleAutoMode() {
-            const btn = document.getElementById('btnAutoToggle');
-            const speed = parseInt(document.getElementById('autoSpeed').value);
-
-            if (isAutoPlaying) {
-                stopAutoMode();
-            } else {
-                if (availableNumbers.length === 0) {
-                    alert("Hết số rồi!");
-                    return;
-                }
-                // Start Auto
-                isAutoPlaying = true;
-                btn.innerText = "DỪNG";
-                btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                btn.classList.add('bg-red-500', 'hover:bg-red-600', 'animate-pulse');
-                
-                // Disable manual button while auto is running
-                document.getElementById('btnDraw').disabled = true;
-                document.getElementById('btnDraw').classList.add('opacity-50', 'cursor-not-allowed');
-
-                // Call immediately then set interval
-                drawNumber();
-                autoIntervalId = setInterval(() => {
-                    if (availableNumbers.length > 0 && !isAnimating) {
-                        drawNumber();
-                    } else if (availableNumbers.length === 0) {
-                        stopAutoMode();
-                    }
-                }, speed + 1500); // Speed + animation time buffer
-            }
-        }
-
-        function stopAutoMode() {
-            isAutoPlaying = false;
-            if (autoIntervalId) clearInterval(autoIntervalId);
-            autoIntervalId = null;
-            
-            const btn = document.getElementById('btnAutoToggle');
-            btn.innerText = "BẬT";
-            btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
-            btn.classList.remove('bg-red-500', 'hover:bg-red-600', 'animate-pulse');
-            
-            // Re-enable manual button if not animating
-            if (!isAnimating && availableNumbers.length > 0) {
-                document.getElementById('btnDraw').disabled = false;
-                document.getElementById('btnDraw').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        // --- Core Draw Function ---
+        // === ACTION ===
         function drawNumber() {
             if (isAnimating) return;
             if (availableNumbers.length === 0) {
@@ -420,63 +410,107 @@
             }
 
             isAnimating = true;
-            const btn = document.getElementById('btnDraw');
             const display = document.getElementById('displayNumber');
             const ball = document.getElementById('currentBall');
-            
-            // Visual start
-            ball.classList.add('shaking');
-            display.classList.remove('text-red-600');
-            display.classList.add('text-green-600');
-            
-            // Animation loop
-            let count = 0;
-            const animDuration = 1200; // 1.2s animation
-            const interval = setInterval(() => {
-                const randomTemp = Math.floor(Math.random() * 90) + 1;
-                display.innerText = randomTemp;
-                count++;
-            }, 80);
+            const btn = document.getElementById('btnDraw');
 
-            // Finalize after animation
+            // Hiệu ứng bắt đầu
+            ball.classList.add('shaking', 'active-spin');
+            display.className = "text-6xl md:text-8xl landscape-compact-text font-black text-brand-600 tracking-tighter opacity-80 blur-[1px]"; // Làm mờ nhẹ khi quay
+            document.getElementById('statusText').innerText = "Đang quay...";
+            
+            let count = 0;
+            const interval = setInterval(() => {
+                display.innerText = Math.floor(Math.random() * 90) + 1;
+                count++;
+            }, 60);
+
+            // Kết thúc sau 1s
             setTimeout(() => {
                 clearInterval(interval);
                 
-                // Logic pick number
-                const randomIndex = Math.floor(Math.random() * availableNumbers.length);
-                const selectedNumber = availableNumbers[randomIndex];
-                
-                availableNumbers.splice(randomIndex, 1);
-                drawnNumbers.push(selectedNumber);
+                // Logic chọn số
+                const idx = Math.floor(Math.random() * availableNumbers.length);
+                const num = availableNumbers[idx];
+                availableNumbers.splice(idx, 1);
+                drawnNumbers.push(num);
 
                 // Update UI
-                ball.classList.remove('shaking');
-                display.innerText = selectedNumber;
-                display.classList.remove('text-green-600');
-                display.classList.add('text-red-600');
+                ball.classList.remove('shaking', 'active-spin');
+                display.innerText = num;
+                display.className = "text-6xl md:text-8xl landscape-compact-text font-black text-brand-600 tracking-tighter transition-all animate-pop"; // Màu xanh đậm
+                document.getElementById('statusText').innerText = `Số: ${num}`;
                 
-                renderBoard();
+                // Update Bảng & Lịch sử
+                const cell = document.getElementById(`cell-${num}`);
+                if(cell) {
+                    cell.className = "flex items-center justify-center h-8 md:h-10 rounded-lg text-sm md:text-base font-bold transition-all duration-300 border bg-brand-500 text-white border-brand-600 shadow-md transform scale-110 shadow-brand-200 z-10";
+                }
+                
                 renderHistory();
-                updateCountDisplay();
-                speakNumber(selectedNumber);
+                updateStats();
+                speak(`Số ${num}`);
 
                 isAnimating = false;
-                
-                // Check end game
-                if (availableNumbers.length === 0) {
+
+                // Check hết số
+                if(availableNumbers.length === 0) {
                     document.getElementById('statusText').innerText = "HẾT SỐ!";
+                    btn.disabled = true;
+                    btn.className = "w-full bg-gray-400 text-white text-lg font-bold py-3 md:py-4 rounded-xl shadow-none cursor-not-allowed flex items-center justify-center gap-2";
                     btn.innerText = "HẾT SỐ";
                     stopAutoMode();
                 }
 
-            }, animDuration);
+            }, 1000);
         }
 
+        // === AUTO MODE ===
+        function toggleAutoMode() {
+            const btn = document.getElementById('btnAutoToggle');
+            const speed = parseInt(document.getElementById('autoSpeed').value);
+            
+            if(isAutoPlaying) {
+                stopAutoMode();
+            } else {
+                if(availableNumbers.length === 0) return alert("Hết số!");
+                isAutoPlaying = true;
+                
+                // UI Button Style Change
+                btn.innerText = "DỪNG";
+                btn.className = "bg-red-50 shadow text-red-500 hover:text-red-600 px-3 py-1 rounded-md text-xs font-bold transition-colors border border-red-100 animate-pulse";
+                document.getElementById('btnDraw').disabled = true;
+                document.getElementById('btnDraw').classList.add('opacity-70', 'cursor-wait');
+
+                drawNumber();
+                autoIntervalId = setInterval(() => {
+                    if(!isAnimating && availableNumbers.length > 0) {
+                        drawNumber();
+                    } else if (availableNumbers.length === 0) {
+                        stopAutoMode();
+                    }
+                }, speed + 1200);
+            }
+        }
+
+        function stopAutoMode() {
+            isAutoPlaying = false;
+            if(autoIntervalId) clearInterval(autoIntervalId);
+            autoIntervalId = null;
+            
+            const btn = document.getElementById('btnAutoToggle');
+            btn.innerText = "BẬT";
+            btn.className = "bg-white shadow text-gray-500 hover:text-brand-600 px-3 py-1 rounded-md text-xs font-bold transition-colors";
+            
+            if(!isAnimating && availableNumbers.length > 0) {
+                const drawBtn = document.getElementById('btnDraw');
+                drawBtn.disabled = false;
+                drawBtn.classList.remove('opacity-70', 'cursor-wait');
+            }
+        }
+        
         function resetGame() {
-            if (drawnNumbers.length > 0 && confirm("Bạn có chắc muốn xóa hết lịch sử và chơi lại từ đầu không?")) {
-                initGame();
-                document.getElementById('btnDraw').innerText = "QUAY SỐ (Space)";
-            } else if (drawnNumbers.length === 0) {
+            if(drawnNumbers.length === 0 || confirm("Chơi ván mới nhé?")) {
                 initGame();
             }
         }
